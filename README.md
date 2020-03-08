@@ -4,6 +4,12 @@ Automatic modulation recognition is an area of increasing interest for applicati
 
 This project builds on the work of [3] by investigating complex representations of spectrograms. Examples of in-phase, quadrature, magnitude, and phase angle spectrograms can be viewd in the signal_view_testbed notebook. We use the 2016.10a dataset created by O’Shea and West [4] which contains 1000 examples of each of 11 different modulation techniques and 20 signal to noise ratios (SNR) from -20 to 18 dBm. Each example consists of 128 IQ values of the modulated signal. After calculating the complex spectrogram representations of each signal, we stack the two-dimensional spectrograms along a third axis creating a dual-channel image allowing for simple implementation in popular deep learning frameworks. The SCNN architecture developed by Zeng et al is then implemented with our complex spectrogram representations as input. For comparison, we present results obtained using dual-channel spectrograms of in-phase/quadrature and magnitude/phase angle in addition to each single-channel spectrogram type. Additionally, the effect of unwrapping phase angle is considered. Using our methodology, preliminary results of dual-channel complex spectrograms show significantly higher validation accuracy with 15 percent fewer parameters than [3].
 
+
+## Setup
+Datasets used can be found on https://www.deepsig.io/datasets. These were originally created by O'Shea and West as discussed in [4]. Move the 2016.10a dataset into a datasets/ directory in the main folder for compatability with the process_data notebook.
+
+## References
+
 1. N. E. West and T. O’Shea, “Deep architectures for modulation recognition,” in 2017 IEEE International Symposium on Dynamic Spectrum Access Networks (DySPAN), 2017, pp. 1–6, doi: 10.1109/DySPAN.2017.7920754.
 
 2. M. Zhang, Y. Zeng, Z. Han, and Y. Gong, “Automatic Modulation Recognition Using Deep Learning Architectures,” in 2018 IEEE 19th International Workshop on Signal Processing Advances in Wireless Communications (SPAWC), 2018, pp. 1–5, doi: 10.1109/SPAWC.2018.8446021.
