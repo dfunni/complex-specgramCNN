@@ -92,7 +92,7 @@ def iq_to_spec(data_dict, nperseg, noverlap, n_ex=None, nfft=None):
                                              nperseg=nperseg,
                                              noverlap=noverlap,
                                              nfft=nfft,
-                                             mode='psd',
+                                             mode='complex',
                                              return_onesided=True)
         
         x_s[i*n_f : n_f*(i + 1), :] = sxx
