@@ -6,7 +6,7 @@ This project builds on the work of [3] by investigating complex representations 
 
 
 ## Setup
-Datasets used can be found on https://www.deepsig.io/datasets. These were originally created by O'Shea and West as discussed in [4]. Move the 2016.10a dataset into a datasets/ directory in the main folder for compatability with the process_data notebook.
+Datasets used can be found on https://www.deepsig.io/datasets. These were originally created by O'Shea and West as discussed in [4]. Download the 2016.10a dataset and move into a datasets/ directory in the main directory for compatability with the process_data notebook.
 
 ## References
 
