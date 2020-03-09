@@ -4,6 +4,7 @@
 import argparse
 import os
 import sys
+import re
 
 ## update path to include all relevant files
 sys.path.append("modules")
@@ -25,21 +26,27 @@ from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
 
 ## Modules
 import utilities as ut
+import preprocess
 
 
-def main(dataset, snrs, model_name, epochs):
-    ## Pre-process dataset
+def main(dataset, snrs, model_name, epochs, I, Q, mag, ph, ph_unwrap):
+    
     raw_data = ut.load_dataset(dataset)
-    data_dict = ut.select_SNRs(raw_data, snrs)
 
+    ## Pre-process dataset
+    data_dict = preprocess.select_SNRs(raw_data, snrs)
     n_ex = data_dict['x'].shape[0]
-
     print('There are {} examples in dataset.'.format(data_dict['x'].shape[0]))
     print('Each example is a complex vector of length of {}.'.format(data_dict['x'].shape[1]))
     print('There were {} SNRs used.'.format(len(snrs)))
-
-    spec_dict = ut.process_spec(data_dict, nperseg=29, noverlap=28, n_ex=None, nfft=100, 
-                                I=True, Q=True, mag=False, ph=False, ph_unwrap=False)
+    spec_dict = preprocess.process_spec(data_dict,
+                                        nperseg=29, 
+                                        noverlap=28, 
+                                        n_ex=None, 
+                                        nfft=100, 
+                                        I=I, Q=Q, 
+                                        mag=mag, ph=ph, 
+                                        ph_unwrap=ph_unwrap)
 
 
     ## View data
@@ -52,13 +59,13 @@ def main(dataset, snrs, model_name, epochs):
 
 
     ## Implement deep learning
-    X = spec_dict['x_s']
-    y_labels, y = tf.unique(spec_dict['y'])
-    # X = tf.convert_to_tensor(X)
-    # y = tf.convert_to_tensor(y)
+    X_train, y_train, X_test, y_test = preprocess.process_data(spec_dict, 
+                                                               test_split=0.0, 
+                                                               blur=False)
+    print("Input shape: {}".format(X_train.shape))
 
     model = Sequential()
-    model.add(Conv2D(64, kernel_size=(3,3), activation='relu', input_shape=X.shape[1:], padding='same'))
+    model.add(Conv2D(64, kernel_size=(3,3), activation='relu', input_shape=X_train.shape[1:], padding='same'))
     model.add(MaxPooling2D(pool_size=(2,2)))
     model.add(Conv2D(32, kernel_size=(3,3), activation='relu', padding='same'))
     model.add(MaxPooling2D(pool_size=(2,2)))
@@ -75,7 +82,7 @@ def main(dataset, snrs, model_name, epochs):
 
     model.summary()
 
-    hist = model.fit(X, y, batch_size=128, epochs=epochs, validation_split=0.1, verbose=1)
+    hist = model.fit(X_train, y_train, batch_size=128, epochs=epochs, validation_split=0.1, verbose=1)
 
     plt.plot(hist.history['accuracy'])
     plt.plot(hist.history['val_accuracy'])
@@ -108,10 +115,24 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', type=int, help='number of epochs to train.',
                         default=10)
 
+    parser.add_argument('-o', '--channel_options', type=str,
+                        help='''options for channels:
+                        i = in-phase
+                        q = quadrature
+                        m = magnitude
+                        p = phase angle
+                        u = unwrapped phase angle
+                        ex: -o iqmpu    selecs all types of channels.''',
+                        default='mp')
+
     args = parser.parse_args()
 
+    ch_opts = list(args.channel_options)
+    ch_i = any([bool(re.search('i', c, re.IGNORECASE)) for c in ch_opts])
+    ch_q = any([bool(re.search('q', c, re.IGNORECASE)) for c in ch_opts])
+    ch_m = any([bool(re.search('m', c, re.IGNORECASE)) for c in ch_opts])
+    ch_p = any([bool(re.search('p', c, re.IGNORECASE)) for c in ch_opts])
+    ch_u = any([bool(re.search('u', c, re.IGNORECASE)) for c in ch_opts])
+
     dataset = 'datasets/' + args.dataset
-    main(dataset, [args.snrs], args.model_filename, args.epochs)
-
-
-
+    main(dataset, list(args.snrs), args.model_filename, args.epochs, I=ch_i, Q=ch_q, mag=ch_m, ph=ch_p, ph_unwrap=ch_u)

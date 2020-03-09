@@ -31,15 +31,6 @@ def from_pickle(filename):
     return spec_dict
 
 
-def split_dict(tdt_dict):
-    key = [key for key in tdt_dict.keys()]
-    x = tdt_dict[key[0]]
-    y = tdt_dict[key[1]]
-    snr = tdt_dict[key[2]]
-
-    return x, y, snr
-
-
 def get_mods_and_snrs(raw_dict):
     mods = sorted(set([key[0] for key in raw_dict.keys()]))
     snrs = sorted(set([key[1] for key in raw_dict.keys()]))
@@ -183,6 +174,16 @@ def shuffle_data(spec_dict):
     x_s, y, snr = shuffle(x_s, y, snr)
     shuffle_dict = {'x_s': x_s, 'y': y, 'snr': snr}
     return shuffle_dict
+
+    
+def split_dict(tdt_dict):
+    key = [key for key in tdt_dict.keys()]
+    x = tdt_dict[key[0]]
+    y = tdt_dict[key[1]]
+    snr = tdt_dict[key[2]]
+
+    return x, y, snr
+
 
 
 def blur_spec(spec_dict, ksize=(7,7)):
