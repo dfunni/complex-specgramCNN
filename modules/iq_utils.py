@@ -147,20 +147,6 @@ def process_data(spec_dict, test_split=0, blur=False):
     return X_train, y_train, X_test, y_test
 
 
-def process_data_3c(spec_dict, test_split=0, blur=False):
-
-    if blur:
-        spec_dict = blur_spec_3c(spec_dict, ksize=(7,7))
-
-    train_dict, test_dict = train_test_split(spec_dict, test_split)
-    X_train, y_train, snr_train = split_dict(train_dict)
-    X_test, y_test, snr_test = split_dict(test_dict)
-    y_train_labels, y_train = tf.unique(y_train)
-    y_test_labels, y_test = tf.unique(y_test)
-
-    return X_train, y_train, X_test, y_test
-
-
 def plot_spectrogram(spec_dict, ex_num):
     x_s = spec_dict['x_s'][ex_num]
     y = spec_dict['y'][ex_num]
