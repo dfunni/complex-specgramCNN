@@ -3,6 +3,8 @@
 
 # Datasets directory stores 2016.10a dataset from DeepSig.io
 datasets/
+models/
+processed_data/
 
 # Modified datasets
 *.pkl
