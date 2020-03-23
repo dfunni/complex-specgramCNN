@@ -48,3 +48,19 @@ def plot_iq(data_dict, ex_num):
     plt.plot(np.imag(x))
     plt.title('Waveform: ' + y + '    SNR: ' + str(snr))
     plt.show()
+
+
+def plot_history(history, description=None):
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
+    plt.title('Model accuracy')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Epoch')
+    plt.ylim(0,1)
+    plt.legend(['Training Accuracy', 'Validation Accuracy'], loc='upper left')
+    
+    print(f"Plot description: {description}")
+    print(f"final accuracy:\t\t\t{history.history['accuracy'][-1]}")
+    print(f"final validation accuracy:\t{history.history['val_accuracy'][-1]}")
+
+    plt.show()
