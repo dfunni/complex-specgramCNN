@@ -1,11 +1,8 @@
-import pickle
 import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.utils import shuffle
 from scipy import signal
 import cv2
 import tensorflow as tf
-
 
 
 def _get_mods_and_snrs(raw_dict):
@@ -16,19 +13,19 @@ def _get_mods_and_snrs(raw_dict):
 
 
 def select_SNRs(raw_dict, snrs=None):
-    ''' Makes dict of selected SNRs from initial dataset 
-    
+    ''' Makes dict of selected SNRs from initial dataset
+
     Arguments:
        raw_dict: raw dataset dict, eg 2016.10a
        snrs:     list of SNRs to use for futher processing
-    
+
     data output with the following keys:
        x:     complex valued samples
        y:     ground truth modulation type
        snr:   SNR level
     '''
 
-    if snrs == None:
+    if snrs is None:
         mods, snrs = _get_mods_and_snrs(raw_dict)
     else:
         mods, _ = _get_mods_and_snrs(raw_dict)
@@ -36,7 +33,7 @@ def select_SNRs(raw_dict, snrs=None):
     for mod in mods:
         for power in snrs:
             vals = raw_dict[(mod, power)]
-            vals = vals[:,0] + 1j*vals[:,1]
+            vals = vals[:, 0] + 1j*vals[:, 1]
             try:
                 x = np.append(x, vals, axis=0)
                 y = np.append(y, np.repeat(mod, vals.shape[0]))
@@ -45,7 +42,7 @@ def select_SNRs(raw_dict, snrs=None):
                 x = vals
                 y = np.repeat(mod, vals.shape[0])
                 snr = np.repeat(power, vals.shape[0])
-    
+
     data_dict = {'x': x, 'y': y, 'snr': snr}
     return data_dict
 
@@ -56,14 +53,14 @@ def normalize_spectrogram(x_s):
 
     num_spec_type = x_s.shape[-1]
     for i in range(num_spec_type):
-        x_s[:,:,:,i] =  (x_s[:,:,:,i]-np.min(x_s[:,:,:,i])) / (np.max(x_s[:,:,:,i])-np.min(x_s[:,:,:,i]))
+        x_s[:,:,:,i] = (x_s[:,:,:,i]-np.min(x_s[:,:,:,i])) / (np.max(x_s[:,:,:,i])-np.min(x_s[:,:,:,i]))
     return x_s
 
 
-def process_spec(data_dict, nperseg, noverlap, n_ex=None, nfft=None, 
-                    I=False, Q=False, mag=True, ph=True, ph_unwrap=False):
+def process_spec(data_dict, nperseg, noverlap, n_ex=None, nfft=None,
+                 inph=False, quad=False, mag=True, ph=True, ph_unwrap=False):
     ''' Takes processed dict containing complex valued samples, ground truth
-    modulation types, and SNR levels and converts examples to complex 
+    modulation types, and SNR levels and converts examples to complex
     spectrograms.
 
     Arguments:
@@ -86,21 +83,21 @@ def process_spec(data_dict, nperseg, noverlap, n_ex=None, nfft=None,
     '''
 
     # Determine number of channels for the spectrogram output
-    nchan = int(I) + int(Q) + int(mag) + int(ph) + int(ph_unwrap)
+    nchan = int(inph) + int(quad) + int(mag) + int(ph) + int(ph_unwrap)
 
     # number of examples in dataset used
-    if n_ex == None:
+    if n_ex is None:
         n_ex = data_dict['y'].size
 
     # nfft handler
-    if nfft == None:
+    if nfft is None:
         n_f = nperseg
     else:
         n_f = nfft
 
     # time axis length
     n_t = int((128-nperseg)/(nperseg-noverlap) + 1)
-    
+
     # initialize outputs
     x_s = np.zeros((n_f * n_ex, n_t, nchan))
     y = []
@@ -108,10 +105,10 @@ def process_spec(data_dict, nperseg, noverlap, n_ex=None, nfft=None,
     spec_types = []
 
     # make spec_type list for plotting purposes
-    if I:
-        spec_types.append('I')
-    if Q:
-        spec_types.append('Q')
+    if inph:
+        spec_types.append('inph')
+    if quad:
+        spec_types.append('quad')
     if mag:
         spec_types.append('mag')
     if ph:
@@ -133,20 +130,20 @@ def process_spec(data_dict, nperseg, noverlap, n_ex=None, nfft=None,
         # build spectrogram output (x_s) with selected spectrogram types
         # stacked into image-like channels
         ch = 0
-        if I:
-            x_s[j*n_f : n_f*(j + 1), :, ch] = np.real(sxx)
+        if inph:
+            x_s[j*n_f: n_f*(j + 1), :, ch] = np.real(sxx)
             ch += 1
-        if Q:
-            x_s[j*n_f : n_f*(j + 1), :, ch] = np.imag(sxx)
+        if quad:
+            x_s[j*n_f: n_f*(j + 1), :, ch] = np.imag(sxx)
             ch += 1
         if mag:
-            x_s[j*n_f : n_f*(j + 1), :, ch] = np.abs(sxx)
+            x_s[j*n_f: n_f*(j + 1), :, ch] = np.abs(sxx)
             ch += 1
         if ph:
-            x_s[j*n_f : n_f*(j + 1), :, ch] = np.angle(sxx)
+            x_s[j*n_f: n_f*(j + 1), :, ch] = np.angle(sxx)
             ch += 1
         if ph_unwrap:
-            x_s[j*n_f : n_f*(j + 1), :, ch] = np.unwrap(np.angle(sxx))
+            x_s[j*n_f: n_f*(j + 1), :, ch] = np.unwrap(np.angle(sxx))
             ch += 1
 
         # save other output values for the example
@@ -158,15 +155,15 @@ def process_spec(data_dict, nperseg, noverlap, n_ex=None, nfft=None,
     x_s = normalize_spectrogram(x_s)
     y = np.array(y)
     snr = np.array(snr)
-    
+
     # build spectrogram dictionary
-    spec_dict = {'x_s': x_s, 
-                 'y': y, 
-                 'snr': snr, 
-                 't': t, 
+    spec_dict = {'x_s': x_s,
+                 'y': y,
+                 'snr': snr,
+                 't': t,
                  'f': f,
                  'types': spec_types}
-                
+
     return spec_dict
 
 
@@ -214,15 +211,15 @@ def _split_dict(tdt_dict):
     return x, y, snr
 
 
-def blur_spec(spec_dict, ksize=(7,7)):
+def blur_spec(spec_dict, ksize=(7, 7)):
     specs = spec_dict['x_s'][:,:,:,0]
     n_ex, n_f, n_t = specs.shape[:3]
     for i in range(n_ex):
         specs[i] = cv2.GaussianBlur(specs[i], ksize=ksize, sigmaX=0, sigmaY=0)
 
-    blur_dict['x_s'] = specs.reshape(n_ex, n_f, n_t, 1)
+    spec_dict['x_s'] = specs.reshape(n_ex, n_f, n_t, 1)
 
-    return blur_dict
+    return spec_dict
 
 
 def process_data(spec_dict, test_split=0, blur=False):

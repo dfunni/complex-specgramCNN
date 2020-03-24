@@ -1,5 +1,4 @@
 import pickle
-import numpy as np
 
 
 def load_dataset(filename):
@@ -21,8 +20,8 @@ def from_pickle(filename):
     # loads processed data from pickle format
     if filename[-4:] != '.pkl':
         filename = filename + '.pkl'
-        
+
     with open(filename, 'rb') as handle:
         sample_dict = pickle.load(handle)
-        
+
     return sample_dict

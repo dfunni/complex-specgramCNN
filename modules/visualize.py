@@ -5,7 +5,6 @@ from scipy.fft import fftshift
 
 def plot_spectrogram(spec_dict, ex_num):
     # plots spectrograms given example number and dictionary of spectrograms
-    
     # spectrogram axes
     t = spec_dict['t']
     f = spec_dict['f']
@@ -25,17 +24,16 @@ def plot_spectrogram(spec_dict, ex_num):
     # plot each spectrogram type for a given example number
     for j in range(ntypes):
 
-        sxx = spec_dict['x_s'][ex_num,:,:,j]
+        sxx = spec_dict['x_s'][ex_num, :, :, j]
 
         plt.subplot(1, ntypes, j+1)
         sxx = np.reshape(sxx, (sxx.shape[0], sxx.shape[1]))
-        plt.title(str(spec_types[j]) + '\nWaveform: ' + y + '    SNR: ' + str(snr))
-        plt.pcolormesh(t, 
-                       fftshift(f), 
-                       fftshift((sxx), 
-                       axes=0), 
+        plt.title(f"{spec_types[j]}\nWaveform: {y}\nSNR: {snr}")
+        plt.pcolormesh(t,
+                       fftshift(f),
+                       fftshift((sxx), axes=0),
                        cmap='jet')
-    
+
     plt.show()
 
 
@@ -58,7 +56,7 @@ def plot_history(history, description=None):
     plt.xlabel('Epoch')
     plt.ylim(0,1)
     plt.legend(['Training Accuracy', 'Validation Accuracy'], loc='upper left')
-    
+
     print(f"Plot description: {description}")
     print(f"final accuracy:\t\t\t{history.history['accuracy'][-1]}")
     print(f"final validation accuracy:\t{history.history['val_accuracy'][-1]}")
