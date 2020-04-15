@@ -42,7 +42,7 @@ import preprocess
 import visualize as viz
 
 
-def build_SCNN(X_train, fit_params):
+def build_SCNN(X_train, y_train, fit_params):
     model = Sequential()
 
     model.add(Conv2D(64, kernel_size=(3,3), activation='relu',
@@ -121,7 +121,7 @@ def main(fit_params):
         print(f"The training dataset of shape: {X_train.shape}\n")
 
         ## Train model 1
-        model, history_mag = build_SCNN(X_train, fit_params)
+        model, history_mag = build_SCNN(X_train, y_train, fit_params)
 
         # plt.plot(history_mag.history['val_acc'],
         #          label=f'val_acc {desc} {snr}')
@@ -150,7 +150,7 @@ def main(fit_params):
         print(f"The training dataset of shape: {X_train.shape}\n")
 
         ## Train model 2
-        model, history_mp = build_SCNN(X_train, fit_params)      
+        model, history_mp = build_SCNN(X_train, y_train, fit_params)      
 
         # plt.plot(history_mp.history['val_acc'],
         #          label=f'val_acc {desc} {snr}')
@@ -179,7 +179,7 @@ def main(fit_params):
         print(f"The training dataset of shape: {X_train.shape}\n")
 
         ## Train model 2
-        model, history_mpu = build_SCNN(X_train, fit_params)
+        model, history_mpu = build_SCNN(X_train, y_train, fit_params)
 
         # plt.plot(history_mpu.history['val_acc'],
         #          label=f'val_acc {desc} {snr}')
@@ -208,7 +208,7 @@ def main(fit_params):
         print(f"The training dataset of shape: {X_train.shape}\n")
 
         ## Train model 2
-        model, history_iq = build_SCNN(X_train, fit_params)
+        model, history_iq = build_SCNN(X_train, y_train, fit_params)
 
         # plt.plot(history_iq.history['val_acc'],
         #          label=f'val_acc {desc} {snr}')
