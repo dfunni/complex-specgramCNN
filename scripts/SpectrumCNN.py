@@ -32,6 +32,7 @@ import tensorflow.keras as K
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
+import pandas as pd
 
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
@@ -43,20 +44,17 @@ import visualize as viz
 
 
 def build_SCNN(X_train, y_train, fit_params):
-    model = Sequential()
 
+    model = Sequential()
     model.add(Conv2D(64, kernel_size=(3,3), activation='relu',
                      input_shape=X_train.shape[1:], padding='same'))
     model.add(MaxPooling2D(pool_size=(2,2)))
-
     model.add(Conv2D(32, kernel_size=(3,3), activation='relu',
                      padding='same'))
     model.add(MaxPooling2D(pool_size=(2,2)))
-
     model.add(Conv2D(12, kernel_size=(3,3), activation='relu',
                      padding='same'))
     model.add(MaxPooling2D(pool_size=(2,2)))
-
     model.add(Conv2D(8, kernel_size=(3,3), activation='relu',
                      padding='same'))
 
@@ -214,7 +212,17 @@ def main(fit_params):
                     color='C3')
         
         #######################################################################
-   
+
+    history_dict = {
+                    'mag hist': history_mag.history,
+                    'mp hist': history_mp.history,
+                    'mpu hist': history_mpu.history,
+                    'iq hist': history_iq.history
+                    }
+
+    # save history to .csv
+    pd.DataFrame.from_dict(history_dict).to_csv('history.csv', index=False)
+
     plt.title('Model accuracy')
     plt.ylabel('Accuracy')
     plt.xlabel('Epoch')
