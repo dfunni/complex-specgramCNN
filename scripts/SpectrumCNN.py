@@ -42,15 +42,7 @@ import preprocess
 import visualize as viz
 
 
-params_fit =  {
-               "batch_size": 32,
-               "epochs": 25,
-               "validation_split": 0.2,
-               "verbose": 2
-               }
-
-
-def build_SCNN(X_train):
+def build_SCNN(X_train, fit_params):
     model = Sequential()
 
     model.add(Conv2D(64, kernel_size=(3,3), activation='relu',
@@ -76,18 +68,30 @@ def build_SCNN(X_train):
                   optimizer='adam',
                   metrics=['acc'])
 
-    return model
+    history = model.fit(X_train, y_train, **fit_params)
+
+    return model, history
+
+
+def get_data(data_params):
+    spec_dict = preprocess.process_spec(data_dict, **data_params)
+
+    X_train, y_train, X_test, y_test = preprocess.process_data(spec_dict,
+                                                               test_split=0.0,
+                                                               blur=False)
+
+    return X_train, y_train, X_test, y_test
 
 
 ###############################################################################
 ##                                  MAIN                                     ##
 ###############################################################################
-def main():
+def main(fit_params):
     ## Generate Dataset
     filename = "../datasets/RML2016_10a_dict.pkl"
     raw_data = ut.load_dataset(filename)
 
-    snrs = [18]
+    snrs = [-6, 0, 6, 12, 18]
 
     # print(f"\nThere are {data_dict['x'].shape[0]} examples in dataset.")
     # print(f"Examples are complex vectors of length {data_dict['x'].shape[1]}.")
@@ -100,106 +104,134 @@ def main():
         ## Get dataset 1
         desc = 'mag'
 
-        spec_dict = preprocess.process_spec(data_dict, nperseg=29, noverlap=28,
-                                            n_ex=None, nfft=100,
-                                            inph=0, quad=0, 
-                                            mag=1, ph=0, ph_unwrap=0)
+        data_params = {"nperseg": 29,
+                       "noverlap": 28,
+                       "n_ex": None,
+                       "nfft": 100,
+                       "inph": 0,
+                       "quad": 0,
+                       "mag": 1,
+                       "ph": 0,
+                       "ph_unwrap": 0}
 
-        X_train, y_train, X_test, y_test = preprocess.process_data(spec_dict,
-                                                                   test_split=0.0,
-                                                                   blur=False)
+        X_train, y_train, X_test, y_test = get_data(data_params)
 
         print(f"\nRunning model for SNR: {snr} dB.")
         print(f"Data is of type: {desc}")
         print(f"The training dataset of shape: {X_train.shape}\n")
 
         ## Train model 1
-        model = build_SCNN(X_train)
-        model.summary()
-        history_mag = model.fit(X_train, y_train, **params_fit)
+        model, history_mag = build_SCNN(X_train, fit_params)
 
-        
+        # plt.plot(history_mag.history['val_acc'],
+        #          label=f'val_acc {desc} {snr}')
 
-        # plt.plot(history_mag.history['acc'], ls=':', label=f'acc {desc}')
-        plt.plot(history_mag.history['val_acc'],
-                 label=f'val_acc {desc} {snr}')
-        plt.title('Model accuracy')
-        plt.ylabel('Accuracy')
-        plt.xlabel('Epoch')
-        plt.ylim(0,1)
-        plt.legend()
+        plt.scatter(snr, history_mag.history['val_acc'][-1],
+                    label=f'val_acc {desc} {snr}')
 
         #######################################################################
         ## Get dataset 2
-        desc = 'mag + phase'
+        desc = 'mag+phase'
 
-        spec_dict = preprocess.process_spec(data_dict, nperseg=29, noverlap=28,
-                                            n_ex=None, nfft=100,
-                                            inph=0, quad=0,
-                                            mag=1, ph=1, ph_unwrap=0)
+        data_params = {"nperseg": 29,
+                       "noverlap": 28,
+                       "n_ex": None,
+                       "nfft": 100,
+                       "inph": 0,
+                       "quad": 0,
+                       "mag": 1,
+                       "ph": 1,
+                       "ph_unwrap": 0}
 
-        X_train, y_train, X_test, y_test = preprocess.process_data(spec_dict,
-                                                                   test_split=0.0,
-                                                                   blur=False)
+        X_train, y_train, X_test, y_test = get_data(data_params)
 
         print(f"\nRunning model for SNR: {snr} dB.")
         print(f"Data is of type: {desc}")
         print(f"The training dataset of shape: {X_train.shape}\n")
 
         ## Train model 2
-        model = build_SCNN(X_train)
-        # model.summary()
-        history_magph = model.fit(X_train, y_train, **params_fit)
+        model, history_mp = build_SCNN(X_train, fit_params)      
 
-        
+        # plt.plot(history_mp.history['val_acc'],
+        #          label=f'val_acc {desc} {snr}')
 
-        # plt.plot(history_magph.history['acc'], ls=':', label=f'acc {desc}')
-        plt.plot(history_magph.history['val_acc'],
-                 label=f'val_acc {desc} {snr}')
-        plt.title('Model accuracy')
-        plt.ylabel('Accuracy')
-        plt.xlabel('Epoch')
-        plt.ylim(0,1)
-        plt.legend()
-
+        plt.scatter(snr, history_mp.history['val_acc'][-1],
+                    label=f'val_acc {desc} {snr}')
 
         #######################################################################
         ## Get dataset 3
-        desc = 'mag + phase unwrap'
+        desc = 'mag+phun'
 
-        spec_dict = preprocess.process_spec(data_dict, nperseg=29, noverlap=28,
-                                            n_ex=None, nfft=100,
-                                            inph=0, quad=0,
-                                            mag=1, ph=0, ph_unwrap=1)
+        data_params = {"nperseg": 29,
+                       "noverlap": 28,
+                       "n_ex": None,
+                       "nfft": 100,
+                       "inph": 0,
+                       "quad": 0,
+                       "mag": 1,
+                       "ph": 0,
+                       "ph_unwrap": 1}
 
-        X_train, y_train, X_test, y_test = preprocess.process_data(spec_dict,
-                                                                   test_split=0.0,
-                                                                   blur=False)
+        X_train, y_train, X_test, y_test = get_data(data_params)
 
         print(f"\nRunning model for SNR: {snr} dB.")
         print(f"Data is of type: {desc}")
         print(f"The training dataset of shape: {X_train.shape}\n")
 
         ## Train model 2
-        model = build_SCNN(X_train)
-        # model.summary()
-        history_magph = model.fit(X_train, y_train, **params_fit)
+        model, history_mpu = build_SCNN(X_train, fit_params)
 
-        
+        # plt.plot(history_mpu.history['val_acc'],
+        #          label=f'val_acc {desc} {snr}')
 
-        # plt.plot(history_magph.history['acc'], ls=':', label=f'acc {desc}')
-        plt.plot(history_magph.history['val_acc'],
-                 label=f'val_acc {desc} {snr}')
-        plt.title('Model accuracy')
-        plt.ylabel('Accuracy')
-        plt.xlabel('Epoch')
-        plt.ylim(0,1)
-        plt.legend()
+        plt.scatter(snr, history_mpu.history['val_acc'][-1],
+                    label=f'val_acc {desc} {snr}')
 
         #######################################################################
-    
+        ## Get dataset 4
+        desc = 'IQ'
+
+        data_params = {"nperseg": 29,
+                       "noverlap": 28,
+                       "n_ex": None,
+                       "nfft": 100,
+                       "inph": 1,
+                       "quad": 1,
+                       "mag": 0,
+                       "ph": 0,
+                       "ph_unwrap": 0}
+
+        X_train, y_train, X_test, y_test = get_data(data_params)
+
+        print(f"\nRunning model for SNR: {snr} dB.")
+        print(f"Data is of type: {desc}")
+        print(f"The training dataset of shape: {X_train.shape}\n")
+
+        ## Train model 2
+        model, history_iq = build_SCNN(X_train, fit_params)
+
+        # plt.plot(history_iq.history['val_acc'],
+        #          label=f'val_acc {desc} {snr}')
+
+        plt.scatter(snr, history_iq.history['val_acc'][-1],
+                    label=f'val_acc {desc} {snr}')
+        
+        #######################################################################
+   
+    plt.title('Model accuracy')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Epoch')
+    plt.ylim(0,1)
+    plt.legend()
     plt.show()
 
 
+
 if __name__ == "__main__":
-    main()
+
+    fit_params =  {"batch_size": 32,
+                   "epochs": 25,
+                   "validation_split": 0.2,
+                   "verbose": 2}
+
+    main(fit_params)
