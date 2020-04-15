@@ -90,6 +90,8 @@ def main(fit_params):
     desc2 = 'mag+phun'
     desc3 = 'IQ'
 
+    df_hist = pd.DataFrame()
+
     ## Generate Dataset
     filename = "../datasets/RML2016_10a_dict.pkl"
     raw_data = ut.load_dataset(filename)
@@ -213,15 +215,13 @@ def main(fit_params):
         
         #######################################################################
 
-    history_dict = {
-                    'mag hist': history_mag.history,
-                    'mp hist': history_mp.history,
-                    'mpu hist': history_mpu.history,
-                    'iq hist': history_iq.history
-                    }
-
+        df_hist[f'{desc0} {snr}'] = history_mag.history
+        df_hist[f'{desc1} {snr}'] = history_mp.history
+        df_hist[f'{desc2} {snr}'] = history_mpu.history
+        df_hist[f'{desc3} {snr}'] = history_iq.history
+        
     # save history to .csv
-    pd.DataFrame.from_dict(history_dict).to_csv('history.csv', index=False)
+    df_hist.to_csv('history.csv', index=False)
 
     plt.title('Model accuracy')
     plt.ylabel('Accuracy')
