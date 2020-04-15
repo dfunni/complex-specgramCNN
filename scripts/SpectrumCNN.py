@@ -41,9 +41,13 @@ import utilities as ut
 import preprocess
 import visualize as viz
 
-# Constants
-EPOCHS = 20
-BATCH_SIZE = 32
+
+params_fit =  {
+               "batch_size": 32,
+               "epochs": 25,
+               "validation_split": 0.2,
+               "verbose": 2
+               }
 
 
 def build_SCNN(X_train):
@@ -83,7 +87,7 @@ def main():
     filename = "../datasets/RML2016_10a_dict.pkl"
     raw_data = ut.load_dataset(filename)
 
-    snrs = [2, 6, 10, 14, 18]
+    snrs = [18]
 
     # print(f"\nThere are {data_dict['x'].shape[0]} examples in dataset.")
     # print(f"Examples are complex vectors of length {data_dict['x'].shape[1]}.")
@@ -104,18 +108,19 @@ def main():
         X_train, y_train, X_test, y_test = preprocess.process_data(spec_dict,
                                                                    test_split=0.0,
                                                                    blur=False)
+
         print(f"\nRunning model for SNR: {snr} dB.")
-        print(f"The training dataset is of shape: {X_train.shape}\n")
+        print(f"Data is of type: {desc}")
+        print(f"The training dataset of shape: {X_train.shape}\n")
 
         ## Train model 1
         model = build_SCNN(X_train)
         model.summary()
-        history_mag = model.fit(X_train, y_train, batch_size=BATCH_SIZE, 
-                                epochs=EPOCHS, validation_split=0.2, verbose=1)
+        history_mag = model.fit(X_train, y_train, **params_fit)
 
         
 
-        plt.plot(history_mag.history['acc'], ls=':', label=f'acc {desc}')
+        # plt.plot(history_mag.history['acc'], ls=':', label=f'acc {desc}')
         plt.plot(history_mag.history['val_acc'],
                  label=f'val_acc {desc} {snr}')
         plt.title('Model accuracy')
@@ -124,7 +129,7 @@ def main():
         plt.ylim(0,1)
         plt.legend()
 
-        ###########################################################################
+        #######################################################################
         ## Get dataset 2
         desc = 'mag + phase'
 
@@ -137,13 +142,14 @@ def main():
                                                                    test_split=0.0,
                                                                    blur=False)
 
-        print(f"\nThe training dataset is of shape: {X_train.shape}")
+        print(f"\nRunning model for SNR: {snr} dB.")
+        print(f"Data is of type: {desc}")
+        print(f"The training dataset of shape: {X_train.shape}\n")
 
         ## Train model 2
         model = build_SCNN(X_train)
-        model.summary()
-        history_magph = model.fit(X_train, y_train, batch_size=BATCH_SIZE,
-                                  epochs=EPOCHS, validation_split=0.2, verbose=1)
+        # model.summary()
+        history_magph = model.fit(X_train, y_train, **params_fit)
 
         
 
@@ -156,7 +162,41 @@ def main():
         plt.ylim(0,1)
         plt.legend()
 
-        ###########################################################################
+
+        #######################################################################
+        ## Get dataset 3
+        desc = 'mag + phase unwrap'
+
+        spec_dict = preprocess.process_spec(data_dict, nperseg=29, noverlap=28,
+                                            n_ex=None, nfft=100,
+                                            inph=0, quad=0,
+                                            mag=1, ph=0, ph_unwrap=1)
+
+        X_train, y_train, X_test, y_test = preprocess.process_data(spec_dict,
+                                                                   test_split=0.0,
+                                                                   blur=False)
+
+        print(f"\nRunning model for SNR: {snr} dB.")
+        print(f"Data is of type: {desc}")
+        print(f"The training dataset of shape: {X_train.shape}\n")
+
+        ## Train model 2
+        model = build_SCNN(X_train)
+        # model.summary()
+        history_magph = model.fit(X_train, y_train, **params_fit)
+
+        
+
+        # plt.plot(history_magph.history['acc'], ls=':', label=f'acc {desc}')
+        plt.plot(history_magph.history['val_acc'],
+                 label=f'val_acc {desc} {snr}')
+        plt.title('Model accuracy')
+        plt.ylabel('Accuracy')
+        plt.xlabel('Epoch')
+        plt.ylim(0,1)
+        plt.legend()
+
+        #######################################################################
     
     plt.show()
 
