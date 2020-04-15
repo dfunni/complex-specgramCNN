@@ -73,7 +73,7 @@ def build_SCNN(X_train, fit_params):
     return model, history
 
 
-def get_data(data_params):
+def get_data(data_dict, data_params):
     spec_dict = preprocess.process_spec(data_dict, **data_params)
 
     X_train, y_train, X_test, y_test = preprocess.process_data(spec_dict,
@@ -114,7 +114,7 @@ def main(fit_params):
                        "ph": 0,
                        "ph_unwrap": 0}
 
-        X_train, y_train, X_test, y_test = get_data(data_params)
+        X_train, y_train, X_test, y_test = get_data(data_dict, data_params)
 
         print(f"\nRunning model for SNR: {snr} dB.")
         print(f"Data is of type: {desc}")
@@ -143,7 +143,7 @@ def main(fit_params):
                        "ph": 1,
                        "ph_unwrap": 0}
 
-        X_train, y_train, X_test, y_test = get_data(data_params)
+        X_train, y_train, X_test, y_test = get_data(data_dict, data_params)
 
         print(f"\nRunning model for SNR: {snr} dB.")
         print(f"Data is of type: {desc}")
@@ -172,7 +172,7 @@ def main(fit_params):
                        "ph": 0,
                        "ph_unwrap": 1}
 
-        X_train, y_train, X_test, y_test = get_data(data_params)
+        X_train, y_train, X_test, y_test = get_data(data_dict, data_params)
 
         print(f"\nRunning model for SNR: {snr} dB.")
         print(f"Data is of type: {desc}")
@@ -201,7 +201,7 @@ def main(fit_params):
                        "ph": 0,
                        "ph_unwrap": 0}
 
-        X_train, y_train, X_test, y_test = get_data(data_params)
+        X_train, y_train, X_test, y_test = get_data(data_dict, data_params)
 
         print(f"\nRunning model for SNR: {snr} dB.")
         print(f"Data is of type: {desc}")
