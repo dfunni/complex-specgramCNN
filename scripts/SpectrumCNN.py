@@ -87,6 +87,11 @@ def get_data(data_dict, data_params):
 ##                                  MAIN                                     ##
 ###############################################################################
 def main(fit_params):
+    desc0 = 'mag'
+    desc1 = 'mag+phase'
+    desc2 = 'mag+phun'
+    desc3 = 'IQ'
+
     ## Generate Dataset
     filename = "../datasets/RML2016_10a_dict.pkl"
     raw_data = ut.load_dataset(filename)
@@ -102,8 +107,6 @@ def main(fit_params):
 
     ###########################################################################
         ## Get dataset 1
-        desc = 'mag'
-
         data_params = {"nperseg": 29,
                        "noverlap": 28,
                        "n_ex": None,
@@ -117,22 +120,20 @@ def main(fit_params):
         X_train, y_train, X_test, y_test = get_data(data_dict, data_params)
 
         print(f"\nRunning model for SNR: {snr} dB.")
-        print(f"Data is of type: {desc}")
+        print(f"Data is of type: {desc0}")
         print(f"The training dataset of shape: {X_train.shape}\n")
 
         ## Train model 1
         model, history_mag = build_SCNN(X_train, y_train, fit_params)
 
         # plt.plot(history_mag.history['val_acc'],
-        #          label=f'val_acc {desc} {snr}')
+        #          label=f'val_acc {desc0} {snr}')
 
         plt.scatter(snr, history_mag.history['val_acc'][-1],
-                    label=f'val_acc {desc} {snr}')
+                    color='C0')
 
         #######################################################################
-        ## Get dataset 2
-        desc = 'mag+phase'
-
+        ## Get dataset 1
         data_params = {"nperseg": 29,
                        "noverlap": 28,
                        "n_ex": None,
@@ -146,22 +147,20 @@ def main(fit_params):
         X_train, y_train, X_test, y_test = get_data(data_dict, data_params)
 
         print(f"\nRunning model for SNR: {snr} dB.")
-        print(f"Data is of type: {desc}")
+        print(f"Data is of type: {desc1}")
         print(f"The training dataset of shape: {X_train.shape}\n")
 
         ## Train model 2
         model, history_mp = build_SCNN(X_train, y_train, fit_params)      
 
         # plt.plot(history_mp.history['val_acc'],
-        #          label=f'val_acc {desc} {snr}')
+        #          label=f'val_acc {desc1} {snr}')
 
         plt.scatter(snr, history_mp.history['val_acc'][-1],
-                    label=f'val_acc {desc} {snr}')
+                    color='C1')
 
         #######################################################################
-        ## Get dataset 3
-        desc = 'mag+phun'
-
+        ## Get dataset 2
         data_params = {"nperseg": 29,
                        "noverlap": 28,
                        "n_ex": None,
@@ -175,22 +174,20 @@ def main(fit_params):
         X_train, y_train, X_test, y_test = get_data(data_dict, data_params)
 
         print(f"\nRunning model for SNR: {snr} dB.")
-        print(f"Data is of type: {desc}")
+        print(f"Data is of type: {desc2}")
         print(f"The training dataset of shape: {X_train.shape}\n")
 
         ## Train model 2
         model, history_mpu = build_SCNN(X_train, y_train, fit_params)
 
         # plt.plot(history_mpu.history['val_acc'],
-        #          label=f'val_acc {desc} {snr}')
+        #          label=f'val_acc {desc2} {snr}')
 
         plt.scatter(snr, history_mpu.history['val_acc'][-1],
-                    label=f'val_acc {desc} {snr}')
+                    color='C2')
 
         #######################################################################
-        ## Get dataset 4
-        desc = 'IQ'
-
+        ## Get dataset 3
         data_params = {"nperseg": 29,
                        "noverlap": 28,
                        "n_ex": None,
@@ -204,7 +201,7 @@ def main(fit_params):
         X_train, y_train, X_test, y_test = get_data(data_dict, data_params)
 
         print(f"\nRunning model for SNR: {snr} dB.")
-        print(f"Data is of type: {desc}")
+        print(f"Data is of type: {desc3}")
         print(f"The training dataset of shape: {X_train.shape}\n")
 
         ## Train model 2
@@ -214,7 +211,7 @@ def main(fit_params):
         #          label=f'val_acc {desc} {snr}')
 
         plt.scatter(snr, history_iq.history['val_acc'][-1],
-                    label=f'val_acc {desc} {snr}')
+                    color='C3')
         
         #######################################################################
    
@@ -222,7 +219,7 @@ def main(fit_params):
     plt.ylabel('Accuracy')
     plt.xlabel('Epoch')
     plt.ylim(0,1)
-    plt.legend()
+    plt.legend([desd0, desc1, desc2, desc3])
     plt.show()
 
 
