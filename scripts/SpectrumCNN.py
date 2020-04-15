@@ -42,7 +42,8 @@ import preprocess
 import visualize as viz
 
 # Constants
-EPOCHS = 50
+EPOCHS = 20
+BATCH_SIZE = 32
 
 
 def build_SCNN(X_train):
@@ -82,77 +83,80 @@ def main():
     filename = "../datasets/RML2016_10a_dict.pkl"
     raw_data = ut.load_dataset(filename)
 
-    snrs = [18]
-    legnd = []
+    snrs = [2, 6, 10, 14, 18]
 
-    data_dict = preprocess.select_SNRs(raw_data, snrs)
+    # print(f"\nThere are {data_dict['x'].shape[0]} examples in dataset.")
+    # print(f"Examples are complex vectors of length {data_dict['x'].shape[1]}.")
+    # print(f"There were {len(snrs)} SNRs used.\n")
+    for snr in snrs:
 
-
-    print(f"\nThere are {data_dict['x'].shape[0]} examples in dataset.")
-    print(f"Examples are complex vectors of length {data_dict['x'].shape[1]}.")
-    print(f"There were {len(snrs)} SNRs used.\n")
-
-    ###########################################################################
-    ## Get dataset 1
-    spec_dict = preprocess.process_spec(data_dict, nperseg=29, noverlap=28,
-                                        n_ex=None, nfft=100,
-                                        inph=0, quad=0, 
-                                        mag=1, ph=0, ph_unwrap=0)
-
-    X_train, y_train, X_test, y_test = preprocess.process_data(spec_dict,
-                                                               test_split=0.0,
-                                                               blur=False)
-
-    print(f"The training dataset is of shape: {X_train.shape}")
-
-    ## Train model 1
-    model = build_SCNN(X_train)
-    model.summary()
-    history_mag = model.fit(X_train, y_train, batch_size=64, epochs=EPOCHS, 
-                             validation_split=0.2, verbose=1)
-
-    desc = 'mag'
-    legnd = legnd + [f'acc {desc}', f'val_acc {desc}']
-
-    plt.plot(history_mag.history['acc'])
-    plt.plot(history_mag.history['val_acc'])
-    plt.title('Model accuracy')
-    plt.ylabel('Accuracy')
-    plt.xlabel('Epoch')
-    plt.ylim(0,1)
-    plt.legend(legnd, loc='upper left')
+        data_dict = preprocess.select_SNRs(raw_data, [snr])
 
     ###########################################################################
-    ## Get dataset 2
-    spec_dict = preprocess.process_spec(data_dict, nperseg=29, noverlap=28,
-                                        n_ex=None, nfft=100,
-                                        inph=0, quad=0,
-                                        mag=1, ph=1, ph_unwrap=0)
+        ## Get dataset 1
+        desc = 'mag'
 
-    X_train, y_train, X_test, y_test = preprocess.process_data(spec_dict,
-                                                               test_split=0.0,
-                                                               blur=False)
+        spec_dict = preprocess.process_spec(data_dict, nperseg=29, noverlap=28,
+                                            n_ex=None, nfft=100,
+                                            inph=0, quad=0, 
+                                            mag=1, ph=0, ph_unwrap=0)
 
-    print(f"\nThe training dataset is of shape: {X_train.shape}")
+        X_train, y_train, X_test, y_test = preprocess.process_data(spec_dict,
+                                                                   test_split=0.0,
+                                                                   blur=False)
+        print(f"\nRunning model for SNR: {snr} dB.")
+        print(f"The training dataset is of shape: {X_train.shape}\n")
 
-    ## Train model 2
-    model = build_SCNN(X_train)
-    model.summary()
-    history_magph = model.fit(X_train, y_train, batch_size=64, epochs=EPOCHS, 
-                             validation_split=0.2, verbose=1)
+        ## Train model 1
+        model = build_SCNN(X_train)
+        model.summary()
+        history_mag = model.fit(X_train, y_train, batch_size=BATCH_SIZE, 
+                                epochs=EPOCHS, validation_split=0.2, verbose=1)
 
-    desc = 'mag + phase'
-    legnd = legnd + [f'acc {desc}', f'val_acc {desc}']
+        
 
-    plt.plot(history_magph.history['acc'])
-    plt.plot(history_magph.history['val_acc'])
-    plt.title('Model accuracy')
-    plt.ylabel('Accuracy')
-    plt.xlabel('Epoch')
-    plt.ylim(0,1)
-    plt.legend(legnd, loc='upper left')
+        plt.plot(history_mag.history['acc'], ls=':', label=f'acc {desc}')
+        plt.plot(history_mag.history['val_acc'],
+                 label=f'val_acc {desc} {snr}')
+        plt.title('Model accuracy')
+        plt.ylabel('Accuracy')
+        plt.xlabel('Epoch')
+        plt.ylim(0,1)
+        plt.legend()
 
-    ###########################################################################
+        ###########################################################################
+        ## Get dataset 2
+        desc = 'mag + phase'
+
+        spec_dict = preprocess.process_spec(data_dict, nperseg=29, noverlap=28,
+                                            n_ex=None, nfft=100,
+                                            inph=0, quad=0,
+                                            mag=1, ph=1, ph_unwrap=0)
+
+        X_train, y_train, X_test, y_test = preprocess.process_data(spec_dict,
+                                                                   test_split=0.0,
+                                                                   blur=False)
+
+        print(f"\nThe training dataset is of shape: {X_train.shape}")
+
+        ## Train model 2
+        model = build_SCNN(X_train)
+        model.summary()
+        history_magph = model.fit(X_train, y_train, batch_size=BATCH_SIZE,
+                                  epochs=EPOCHS, validation_split=0.2, verbose=1)
+
+        
+
+        # plt.plot(history_magph.history['acc'], ls=':', label=f'acc {desc}')
+        plt.plot(history_magph.history['val_acc'],
+                 label=f'val_acc {desc} {snr}')
+        plt.title('Model accuracy')
+        plt.ylabel('Accuracy')
+        plt.xlabel('Epoch')
+        plt.ylim(0,1)
+        plt.legend()
+
+        ###########################################################################
     
     plt.show()
 
