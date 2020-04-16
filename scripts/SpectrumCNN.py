@@ -96,7 +96,7 @@ def main(fit_params):
     filename = "../datasets/RML2016_10a_dict.pkl"
     raw_data = ut.load_dataset(filename)
 
-    snrs = [-6, 0, 6, 12, 18]
+    snrs = range(-20, 20, 2)
 
     # print(f"\nThere are {data_dict['x'].shape[0]} examples in dataset.")
     # print(f"Examples are complex vectors of length {data_dict['x'].shape[1]}.")
