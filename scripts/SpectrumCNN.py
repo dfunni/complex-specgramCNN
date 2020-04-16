@@ -28,7 +28,7 @@ import sys
 sys.path.append("../modules")
 
 import tensorflow as tf
-import tensorflow.keras as K
+import tensorflow.keras as keras
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
@@ -43,7 +43,10 @@ import preprocess
 import visualize as viz
 
 
-def build_SCNN(X_train, y_train, fit_params):
+def build_SCNN(X_train, y_train, fit_params, filename):
+
+    csv_logger = keras.callbacks.CSVLogger(f'../logs/{filename}.log')
+    callbacks = [csv_logger]
 
     model = Sequential()
     model.add(Conv2D(64, kernel_size=(3,3), activation='relu',
@@ -66,7 +69,7 @@ def build_SCNN(X_train, y_train, fit_params):
                   optimizer='adam',
                   metrics=['acc'])
 
-    history = model.fit(X_train, y_train, **fit_params)
+    history = model.fit(X_train, y_train, callbacks=callbacks, **fit_params)
 
     return model, history
 
@@ -85,10 +88,7 @@ def get_data(data_dict, data_params):
 ##                                  MAIN                                     ##
 ###############################################################################
 def main(fit_params):
-    desc0 = 'mag'
-    desc1 = 'mag+phase'
-    desc2 = 'mag+phun'
-    desc3 = 'IQ'
+    desc = ['m', 'm_p', 'm_pu', 'i_q']
 
     df_hist = pd.DataFrame()
 
@@ -120,18 +120,12 @@ def main(fit_params):
         X_train, y_train, X_test, y_test = get_data(data_dict, data_params)
 
         print(f"\nRunning model for SNR: {snr} dB.")
-        print(f"Data is of type: {desc0}")
+        print(f"Data is of type: {desc[0]}")
         print(f"The training dataset of shape: {X_train.shape}\n")
 
+        fn = f'{desc[0]}_{snr}'
         ## Train model 1
-        model, history_mag = build_SCNN(X_train, y_train, fit_params)
-
-        # plt.plot(history_mag.history['val_acc'],
-        #          label=f'val_acc {desc0} {snr}')
-
-        plt.scatter(snr, history_mag.history['val_acc'][-1],
-                    color='C0')
-
+        model, history_mag = build_SCNN(X_train, y_train, fit_params, fn)
         #######################################################################
         ## Get dataset 1
         data_params = {"nperseg": 29,
@@ -147,18 +141,13 @@ def main(fit_params):
         X_train, y_train, X_test, y_test = get_data(data_dict, data_params)
 
         print(f"\nRunning model for SNR: {snr} dB.")
-        print(f"Data is of type: {desc1}")
+        print(f"Data is of type: {desc[1]}")
         print(f"The training dataset of shape: {X_train.shape}\n")
 
+        fn = f'{desc[1]}_{snr}'
+
         ## Train model 2
-        model, history_mp = build_SCNN(X_train, y_train, fit_params)      
-
-        # plt.plot(history_mp.history['val_acc'],
-        #          label=f'val_acc {desc1} {snr}')
-
-        plt.scatter(snr, history_mp.history['val_acc'][-1],
-                    color='C1')
-
+        model, history_mp = build_SCNN(X_train, y_train, fit_params, fn)      
         #######################################################################
         ## Get dataset 2
         data_params = {"nperseg": 29,
@@ -174,18 +163,13 @@ def main(fit_params):
         X_train, y_train, X_test, y_test = get_data(data_dict, data_params)
 
         print(f"\nRunning model for SNR: {snr} dB.")
-        print(f"Data is of type: {desc2}")
+        print(f"Data is of type: {desc[2]}")
         print(f"The training dataset of shape: {X_train.shape}\n")
 
+        fn = f'{desc[2]}_{snr}'
+
         ## Train model 2
-        model, history_mpu = build_SCNN(X_train, y_train, fit_params)
-
-        # plt.plot(history_mpu.history['val_acc'],
-        #          label=f'val_acc {desc2} {snr}')
-
-        plt.scatter(snr, history_mpu.history['val_acc'][-1],
-                    color='C2')
-
+        model, history_mpu = build_SCNN(X_train, y_train, fit_params, fn)
         #######################################################################
         ## Get dataset 3
         data_params = {"nperseg": 29,
@@ -201,41 +185,20 @@ def main(fit_params):
         X_train, y_train, X_test, y_test = get_data(data_dict, data_params)
 
         print(f"\nRunning model for SNR: {snr} dB.")
-        print(f"Data is of type: {desc3}")
+        print(f"Data is of type: {desc[3]}")
         print(f"The training dataset of shape: {X_train.shape}\n")
 
+        fn = f'{desc[3]}_{snr}'
+
         ## Train model 2
-        model, history_iq = build_SCNN(X_train, y_train, fit_params)
-
-        # plt.plot(history_iq.history['val_acc'],
-        #          label=f'val_acc {desc} {snr}')
-
-        plt.scatter(snr, history_iq.history['val_acc'][-1],
-                    color='C3')
-        
+        model, history_iq = build_SCNN(X_train, y_train, fit_params, fn)
         #######################################################################
-
-        df_hist[f'{desc0} {snr}'] = history_mag.history
-        df_hist[f'{desc1} {snr}'] = history_mp.history
-        df_hist[f'{desc2} {snr}'] = history_mpu.history
-        df_hist[f'{desc3} {snr}'] = history_iq.history
-        
-    # save history to .csv
-    df_hist.to_csv('history.csv', index=False)
-
-    plt.title('Model accuracy')
-    plt.ylabel('Accuracy')
-    plt.xlabel('Epoch')
-    plt.ylim(0,1)
-    plt.legend([desd0, desc1, desc2, desc3])
-    plt.show()
-
 
 
 if __name__ == "__main__":
 
     fit_params =  {"batch_size": 32,
-                   "epochs": 25,
+                   "epochs": 2,
                    "validation_split": 0.2,
                    "verbose": 2}
 
