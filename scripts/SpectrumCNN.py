@@ -23,7 +23,7 @@ This example deviates from Zeng et al's in tje following ways:
     wider variety of data due to various ammounts of noise present.
 """
 
-
+import os
 import sys
 sys.path.append("../modules")
 
@@ -201,5 +201,9 @@ if __name__ == "__main__":
                    "epochs": 25,
                    "validation_split": 0.2,
                    "verbose": 2}
+
+    # check if logs directory exists, if not make it
+    if not os.path.isdir('../logs'):
+        os.mkdir('../logs')
 
     main(fit_params)
