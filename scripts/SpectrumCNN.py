@@ -218,4 +218,8 @@ if __name__ == "__main__":
     if not os.path.isdir('../logs'):
         os.mkdir('../logs')
 
+    # check if logs directory exists, if not make it
+    if not os.path.isdir('../logs'):
+        os.mkdir('../logs')
+
     main(fit_params)
