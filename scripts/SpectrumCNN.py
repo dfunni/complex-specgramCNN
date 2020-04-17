@@ -23,7 +23,7 @@ This example deviates from Zeng et al's in tje following ways:
     wider variety of data due to various ammounts of noise present.
 """
 
-
+import os
 import sys
 sys.path.append("../modules")
 
@@ -41,6 +41,19 @@ from tensorflow.keras.layers import BatchNormalization, Dropout, Activation
 import utilities as ut
 import preprocess
 import visualize as viz
+
+
+gpus = tf.config.experimental.list_physical_devices('GPU')
+if gpus:
+    try:
+        # Currently, memory growth needs to be the same across GPUs
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+        logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+        print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+    except RuntimeError as e:
+        # Memory growth must be set before GPUs have been initialized
+        print(e)
 
 
 def build_SCNN(X_train, y_train, fit_params, filename):
@@ -88,7 +101,7 @@ def get_data(data_dict, data_params):
 ##                                  MAIN                                     ##
 ###############################################################################
 def main(fit_params):
-    desc = ['m', 'm_p', 'm_pu', 'i_q']
+    desc = ['m', 'mp', 'mu', 'iq']
 
     df_hist = pd.DataFrame()
 
@@ -152,7 +165,7 @@ def main(fit_params):
         ## Get dataset 2
         data_params = {"nperseg": 29,
                        "noverlap": 28,
-                       "n_ex": None,
+                      "n_ex": None,
                        "nfft": 100,
                        "inph": 0,
                        "quad": 0,
@@ -200,6 +213,9 @@ if __name__ == "__main__":
     fit_params =  {"batch_size": 32,
                    "epochs": 25,
                    "validation_split": 0.2,
-                   "verbose": 2}
+                   "verbose": 1}
+    
+    if not os.path.isdir('../logs'):
+        os.mkdir('../logs')
 
     main(fit_params)
