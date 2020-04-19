@@ -101,7 +101,8 @@ def get_data(data_dict, data_params):
 ##                                  MAIN                                     ##
 ###############################################################################
 def main(fit_params):
-    desc = ['m', 'mp', 'mu', 'iq']
+    # desc = ['m', 'mp', 'mu', 'iq']
+    desc = ['iqmpu']
 
     df_hist = pd.DataFrame()
 
@@ -109,7 +110,7 @@ def main(fit_params):
     filename = "../datasets/RML2016_10a_dict.pkl"
     raw_data = ut.load_dataset(filename)
 
-    snrs = range(-20, 20, 2)
+    snrs = range(16, 20, 2)
 
     # print(f"\nThere are {data_dict['x'].shape[0]} examples in dataset.")
     # print(f"Examples are complex vectors of length {data_dict['x'].shape[1]}.")
@@ -117,6 +118,7 @@ def main(fit_params):
     for snr in snrs:
 
         data_dict = preprocess.select_SNRs(raw_data, [snr])
+        print("done getting data_dict")
 
     ###########################################################################
         ## Get dataset 1
@@ -124,13 +126,14 @@ def main(fit_params):
                        "noverlap": 28,
                        "n_ex": None,
                        "nfft": 100,
-                       "inph": 0,
-                       "quad": 0,
+                       "inph": 1,
+                       "quad": 1,
                        "mag": 1,
-                       "ph": 0,
-                       "ph_unwrap": 0}
+                       "ph": 1,
+                       "ph_unwrap": 1}
 
         X_train, y_train, X_test, y_test = get_data(data_dict, data_params)
+        print("done getting spec_dict")
 
         print(f"\nRunning model for SNR: {snr} dB.")
         print(f"Data is of type: {desc[0]}")
@@ -138,74 +141,74 @@ def main(fit_params):
 
         fn = f'{desc[0]}_{snr}'
         ## Train model 1
-        model, history_mag = build_SCNN(X_train, y_train, fit_params, fn)
-        #######################################################################
-        ## Get dataset 1
-        data_params = {"nperseg": 29,
-                       "noverlap": 28,
-                       "n_ex": None,
-                       "nfft": 100,
-                       "inph": 0,
-                       "quad": 0,
-                       "mag": 1,
-                       "ph": 1,
-                       "ph_unwrap": 0}
-
-        X_train, y_train, X_test, y_test = get_data(data_dict, data_params)
-
-        print(f"\nRunning model for SNR: {snr} dB.")
-        print(f"Data is of type: {desc[1]}")
-        print(f"The training dataset of shape: {X_train.shape}\n")
-
-        fn = f'{desc[1]}_{snr}'
-
-        ## Train model 2
-        model, history_mp = build_SCNN(X_train, y_train, fit_params, fn)      
-        #######################################################################
-        ## Get dataset 2
-        data_params = {"nperseg": 29,
-                       "noverlap": 28,
-                      "n_ex": None,
-                       "nfft": 100,
-                       "inph": 0,
-                       "quad": 0,
-                       "mag": 1,
-                       "ph": 0,
-                       "ph_unwrap": 1}
-
-        X_train, y_train, X_test, y_test = get_data(data_dict, data_params)
-
-        print(f"\nRunning model for SNR: {snr} dB.")
-        print(f"Data is of type: {desc[2]}")
-        print(f"The training dataset of shape: {X_train.shape}\n")
-
-        fn = f'{desc[2]}_{snr}'
-
-        ## Train model 2
-        model, history_mpu = build_SCNN(X_train, y_train, fit_params, fn)
-        #######################################################################
-        ## Get dataset 3
-        data_params = {"nperseg": 29,
-                       "noverlap": 28,
-                       "n_ex": None,
-                       "nfft": 100,
-                       "inph": 1,
-                       "quad": 1,
-                       "mag": 0,
-                       "ph": 0,
-                       "ph_unwrap": 0}
-
-        X_train, y_train, X_test, y_test = get_data(data_dict, data_params)
-
-        print(f"\nRunning model for SNR: {snr} dB.")
-        print(f"Data is of type: {desc[3]}")
-        print(f"The training dataset of shape: {X_train.shape}\n")
-
-        fn = f'{desc[3]}_{snr}'
-
-        ## Train model 2
-        model, history_iq = build_SCNN(X_train, y_train, fit_params, fn)
-        #######################################################################
+        _, _ = build_SCNN(X_train, y_train, fit_params, fn)
+#         #######################################################################
+#         ## Get dataset 1
+#         data_params = {"nperseg": 29,
+#                        "noverlap": 28,
+#                        "n_ex": None,
+#                        "nfft": 100,
+#                        "inph": 0,
+#                        "quad": 0,
+#                        "mag": 1,
+#                        "ph": 1,
+#                        "ph_unwrap": 0}
+# 
+#         X_train, y_train, X_test, y_test = get_data(data_dict, data_params)
+# 
+#         print(f"\nRunning model for SNR: {snr} dB.")
+#         print(f"Data is of type: {desc[1]}")
+#         print(f"The training dataset of shape: {X_train.shape}\n")
+# 
+#         fn = f'{desc[1]}_{snr}'
+# 
+#         ## Train model 2
+#         model, history_mp = build_SCNN(X_train, y_train, fit_params, fn)      
+#         #######################################################################
+#         ## Get dataset 2
+#         data_params = {"nperseg": 29,
+#                        "noverlap": 28,
+#                       "n_ex": None,
+#                        "nfft": 100,
+#                        "inph": 0,
+#                        "quad": 0,
+#                        "mag": 1,
+#                        "ph": 0,
+#                        "ph_unwrap": 1}
+# 
+#         X_train, y_train, X_test, y_test = get_data(data_dict, data_params)
+# 
+#         print(f"\nRunning model for SNR: {snr} dB.")
+#         print(f"Data is of type: {desc[2]}")
+#         print(f"The training dataset of shape: {X_train.shape}\n")
+# 
+#         fn = f'{desc[2]}_{snr}'
+# 
+#         ## Train model 2
+#         model, history_mpu = build_SCNN(X_train, y_train, fit_params, fn)
+#         #######################################################################
+#         ## Get dataset 3
+#         data_params = {"nperseg": 29,
+#                        "noverlap": 28,
+#                        "n_ex": None,
+#                        "nfft": 100,
+#                        "inph": 1,
+#                        "quad": 1,
+#                        "mag": 0,
+#                        "ph": 0,
+#                        "ph_unwrap": 0}
+# 
+#         X_train, y_train, X_test, y_test = get_data(data_dict, data_params)
+# 
+#         print(f"\nRunning model for SNR: {snr} dB.")
+#         print(f"Data is of type: {desc[3]}")
+#         print(f"The training dataset of shape: {X_train.shape}\n")
+# 
+#         fn = f'{desc[3]}_{snr}'
+# 
+#         ## Train model 2
+#         model, history_iq = build_SCNN(X_train, y_train, fit_params, fn)
+#         #######################################################################
 
 
 if __name__ == "__main__":
