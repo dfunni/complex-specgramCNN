@@ -6,7 +6,8 @@ datasets/
 models/
 processed_data/
 papers/
-
+logs/
+csvs/
 # Modified datasets
 *.pkl
 
