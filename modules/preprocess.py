@@ -6,24 +6,27 @@ import tensorflow as tf
 
 
 def _get_mods_and_snrs(raw_dict):
-    # creates lists of modulations and SNRs in dataset
+    """creates lists of modulations and SNRs in dataset"""
+
     mods = sorted(set([key[0] for key in raw_dict.keys()]))
     snrs = sorted(set([key[1] for key in raw_dict.keys()]))
     return mods, snrs
 
 
 def select_SNRs(raw_dict, snrs=None):
-    ''' Makes dict of selected SNRs from initial dataset
+    """Makes dict of selected SNRs from initial dataset
+            
+    Args:
+        raw_dict (dict): raw dataset dict, eg 2016.10a
+        snrs (list): SNRs to use for futher processing
+            (default is None)
 
-    Arguments:
-       raw_dict: raw dataset dict, eg 2016.10a
-       snrs:     list of SNRs to use for futher processing
-
-    data output with the following keys:
-       x:     complex valued samples
-       y:     ground truth modulation type
-       snr:   SNR level
-    '''
+    Returns:
+        data_dict (dict): data dict containing IQ data of type:
+            {x: complex samples,
+             y: modulations,
+             snr: SNRs}
+    """
 
     if snrs is None:
         mods, snrs = _get_mods_and_snrs(raw_dict)
@@ -48,40 +51,50 @@ def select_SNRs(raw_dict, snrs=None):
 
 
 def normalize_spectrogram(x_s):
-    # normalizes spectrogram between 0 and 1
-    # used in 2 channel iq_to_spec
+    """maps spectrogram to [0,1], used in 2 channel iq_to_spec
+    
+    Args:
+        x_s (np.array): spectrogram array (of type i, q, m, p, or u)
+
+    Returns:
+        x_s (np.array): normalized spectrogram array
+    """
 
     num_spec_type = x_s.shape[-1]
     for i in range(num_spec_type):
-        x_s[:,:,:,i] = (x_s[:,:,:,i]-np.min(x_s[:,:,:,i])) / (np.max(x_s[:,:,:,i])-np.min(x_s[:,:,:,i]))
+        x_i = x_s[...,i]
+        x_s[...,i] = (x_i-x_i.min()) / (x_i.max()-x_i.min())
     return x_s
 
 
 def process_spec(data_dict, nperseg, noverlap, n_ex=None, nfft=None,
-                 inph=False, quad=False, mag=True, ph=True, ph_unwrap=False):
-    ''' Takes processed dict containing complex valued samples, ground truth
-    modulation types, and SNR levels and converts examples to complex
-    spectrograms.
+                 i=False, q=False, m=True, p=True, u=False):
+    """Converts processed dict to complex spectrograms.
 
-    Arguments:
-        data_dict: {
-            x: complex samples,
-            y: modulations,
-            snr: SNRs}
-        nperseg: window length
-        noverlap: window overlap
-        n_ex: number of examples to output
-        nfft: length of fft
+    Args:
+        data_dict (dict): data dict containing IQ data of type:
+            {x: complex samples,
+             y: modulations,
+             snr: SNRs}
+        nperseg (int): window length
+        noverlap (int): window overlap
+        n_ex (int): number of examples to output
+        nfft (int): length of fft
+        i (bool): in-phase (default is False)
+        q (bool): quadrature (default is False)
+        m (bool): magnitude (default is True)
+        p (bool): phase (default is True)
+        u (bool): unwrapped phase (aka angle) (default is False)
 
     Returns:
-        spec_dict: {
-            x_s: complex spectrograms,
-            y: modulations,
-            snr: SNRs,
-            t: time labels for spectrograms,
-            f: freqency labels for spectrograms}
-    '''
-
+        spec_dict (dict): dict with spectrogram data of form:
+            {x_s: complex spectrograms,
+             y: modulations,
+             snr: SNRs,
+             t: time labels for spectrograms,
+             f: freqency labels for spectrograms}
+    """
+    
     # Determine number of channels for the spectrogram output
     nchan = int(inph) + int(quad) + int(mag) + int(ph) + int(ph_unwrap)
 
@@ -94,9 +107,8 @@ def process_spec(data_dict, nperseg, noverlap, n_ex=None, nfft=None,
         n_f = nperseg
     else:
         n_f = nfft
-
-    # time axis length
-    n_t = int((128-nperseg)/(nperseg-noverlap) + 1)
+    
+    n_t = int((128-nperseg)/(nperseg-noverlap) + 1)  # time axis length
 
     # initialize outputs
     x_s = np.zeros((n_f * n_ex, n_t, nchan))
@@ -106,17 +118,17 @@ def process_spec(data_dict, nperseg, noverlap, n_ex=None, nfft=None,
 
     # make spec_type list for plotting purposes
     if inph:
-        spec_types.append('inph')
+        spec_types.append('i')
     if quad:
-        spec_types.append('quad')
+        spec_types.append('q')
     if mag:
-        spec_types.append('mag')
+        spec_types.append('m')
     if ph:
-        spec_types.append('ph')
+        spec_types.append('p')
     if ph_unwrap:
-        spec_types.append('ph_unwrap')
+        spec_types.append('u')
 
-    # iterate over each example calculating spectrogram and output values
+    # iterate over each example calculating spect and output values
     for j in range(n_ex):
         x = data_dict['x'][j]
         f, t, sxx = signal.spectrogram(x,
@@ -168,6 +180,26 @@ def process_spec(data_dict, nperseg, noverlap, n_ex=None, nfft=None,
 
 
 def _shuffle_data(spec_dict):
+    """shuffles data in spectrogram dictionary
+    
+    Args:
+        spec_dict (dict): dict with spectrogram data of form:
+            {x_s: complex spectrograms,
+             y: modulations,
+             snr: SNRs,
+             t: time labels for spectrograms,
+             f: freqency labels for spectrograms}
+
+    Returns:
+        shuffle_dict (dict): shuffled spectrogram data of form:
+            {x_s: complex spectrograms,
+             y: modulations,
+             snr: SNRs}
+
+    NOTE: time and frequency labels are removed from output dictionary
+    NOTE: this function is handled by tensorflow and is unessary
+    """
+
     key = [key for key in spec_dict.keys()]
 
     x_s = spec_dict[key[0]]
@@ -180,7 +212,32 @@ def _shuffle_data(spec_dict):
 
 
 def _train_test_split(spec_dict, test_split=0.1):
-    # test_split is the proprtion of examples to test on
+    """splits training and testing set
+    
+    Args:
+        spec_dict (dict): dict with spectrogram data of form:
+            {x_s: complex spectrograms,
+             y: modulations,
+             snr: SNRs,
+             t: time labels for spectrograms,
+             f: freqency labels for spectrograms}
+        test_split (float): portion of data to be used for testing [0,1]
+            (default is 0.1)
+
+    Returns:
+        train_dict (dict): training data in dictionary of form:
+            {x_s: complex spectrograms,
+             y: modulations,
+             snr: SNRs}
+        test_dict (dict): testing data in dictionary of form:
+            {x_s: complex spectrograms,
+             y: modulations,
+             snr: SNRs}
+             
+
+    NOTE: time and frequency labels are removed from output dictionary
+    NOTE: this function is handled by tensorflow and is unessary
+    """
 
     shuffle_dict = _shuffle_data(spec_dict)
 
@@ -196,13 +253,34 @@ def _train_test_split(spec_dict, test_split=0.1):
     y_test = shuffle_dict['y'][itrain:]
     snr_test = shuffle_dict['snr'][itrain:]
 
-    train_dict = {'x_train': x_train, 'y_train': y_train, 'snr_train': snr_train}
-    test_dict = {'x_test': x_test, 'y_test': y_test, 'snr_test': snr_test}
+    train_dict = {'x_train': x_train,
+                  'y_train': y_train,
+                  'snr_train': snr_train}
+    test_dict = {'x_test': x_test,
+                 'y_test': y_test,
+                  'snr_test': snr_test}
 
     return train_dict, test_dict
 
 
 def _split_dict(tdt_dict):
+    """extracts data from dictionary form
+    
+    Args:
+        tdt_dict (dict): dict with data of form:
+            {x_s: complex spectrograms,
+             y: modulations,
+             snr: SNRs,
+             t: time labels for spectrograms,
+             f: freqency labels for spectrograms}
+        test_split (float): portion of data to be used for testing [0,1]
+
+    Returns:
+        x (np.array): data to be classified
+        y (np.array): ground truth values from dataset
+        snr (np.array): SNR lables of the data
+    """
+
     key = [key for key in tdt_dict.keys()]
     x = tdt_dict[key[0]]
     y = tdt_dict[key[1]]
@@ -212,6 +290,28 @@ def _split_dict(tdt_dict):
 
 
 def blur_spec(spec_dict, ksize=(7, 7)):
+    """blurs spectrogram as discussed by Zeng et al 2019
+    
+    Args:
+        spec_dict (dict): dict with spectrogram data of form:
+            {x_s: complex spectrograms,
+             y: modulations,
+             snr: SNRs,
+             t: time labels for spectrograms,
+             f: freqency labels for spectrograms}
+        ksize (int, int): kernel size of Gaussian blur, must be tuple of 
+            odd numbers
+            (default is (7, 7))
+
+    Returns:
+        spec_dict (dict): dict with spectrogram data of form:
+            {x_s: complex spectrograms,
+             y: modulations,
+             snr: SNRs,
+             t: time labels for spectrograms,
+             f: freqency labels for spectrograms}
+    """
+
     specs = spec_dict['x_s'][:,:,:,0]
     n_ex, n_f, n_t = specs.shape[:3]
     for i in range(n_ex):
@@ -223,6 +323,28 @@ def blur_spec(spec_dict, ksize=(7, 7)):
 
 
 def process_data(spec_dict, test_split=0, blur=False):
+    """blurs spectrogram as discussed by Zeng et al 2019
+    
+    Args:
+        spec_dict (dict): dict with spectrogram data of form:
+            {x_s: complex spectrograms,
+             y: modulations,
+             snr: SNRs,
+             t: time labels for spectrograms,
+             f: freqency labels for spectrograms}
+        test_split (float): portion of data to be used for testing [0,1]
+            (default is 0)
+        blur (bool): flag for Gaussian blur
+            (default is False)
+
+    Returns:
+        spec_dict (dict): dict with spectrogram data of form:
+            {x_s: complex spectrograms,
+             y: modulations,
+             snr: SNRs,
+             t: time labels for spectrograms,
+             f: freqency labels for spectrograms}
+    """
 
     if blur:
         spec_dict = blur_spec(spec_dict, ksize=(7,7))

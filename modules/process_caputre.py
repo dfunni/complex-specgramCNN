@@ -6,6 +6,13 @@ import matplotlib.pyplot as plt
 
 ## Functions for IQ files recorded by gqrx or similar SDR recievers
 def interleave(x_c):
+    '''Converts array of complex numbers and converts to an interleaved array 
+    of the form:
+
+    [I[0], Q[0], I[1], Q[1], ..., I[n], Q[n]]
+
+    '''
+
     I = np.real(x_c)
     Q = np.imag(x_c)
     x_iq = np.empty(I.size + Q.size, dtype=np.float32)
@@ -15,10 +22,20 @@ def interleave(x_c):
 
 
 def _normalize(arr):
+    '''Maps an array to interval [0, 1]'''
+
     return (arr - arr.min()) / (arr.max() - arr.min())
 
 
 def _sigma_thresh(arr, thresh):
+    '''thresholds a given array by a lower and upper threshold given in number
+    of standard deviations
+    inputs:
+        arr         input array
+        thresh      2 valued tuple or array type uppper and lower threshold
+    returns:
+        arr         array
+    '''
     low_thresh, up_thresh = thresh
     sigma = np.std(arr)
     mx = np.mean(arr)
